@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy your R script into the container
-COPY your-script.R /app/Bailey_wishlist_script_19Apr2025.R
+COPY Bailey_wishlist_script_19Apr2025.R /app/Bailey_wishlist_script_19Apr2025.R
 
 # Install required R packages
 RUN R -e "install.packages(c('data.table', 'jsonlite', 'httr', 'googlesheets4', 'curl', 'gargle', 'googledrive'), repos='https://cloud.r-project.org/')"
