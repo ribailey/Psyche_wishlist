@@ -25,16 +25,23 @@ jobs:
     - name: Set up R
       uses: r-lib/actions/setup-r@v2
 
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends \
-          libcurl4-openssl-dev \
-          libssl-dev \
-          libxml2-dev \
-          libfontconfig1-dev \
-          libharfbuzz-dev \
-          libfribidi-dev
+- name: Install system dependencies
+  run: |
+    sudo apt-get update
+    sudo apt-get install -y --no-install-recommends \
+      libcurl4-openssl-dev \
+      libssl-dev \
+      libxml2-dev \
+      libfontconfig1-dev \
+      libharfbuzz-dev \
+      libfribidi-dev \
+      libjpeg-dev \       # Added for jpeg package
+      libsodium-dev \     # Added for sodium package
+      libudunits2-dev \   # Added for units package
+      libgdal-dev \       # Added for sf package
+      libproj-dev \       # Added for sf package (proj)
+      libgeos-dev \       # Added for sf package (geos)
+      gdal-bin            # Added for sf package (gdal utilities)
 
     - name: Install R packages
       run: |
