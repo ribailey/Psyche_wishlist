@@ -24,8 +24,6 @@ jobs:
 
     - name: Set up R
       uses: r-lib/actions/setup-r@v2
-      with:
-        r-version: '4.2.0'
 
     - name: Install system dependencies
       run: |
@@ -42,20 +40,12 @@ jobs:
       run: |
         R -e "install.packages(c('data.table', 'jsonlite', 'httr', 'curl', 'gargle', 'googledrive', 'googlesheets4'), repos='https://cloud.r-project.org/', dependencies=TRUE)"
 
-    - name: Set up Google authentication
+    - name: Setup Google authentication
       env:
-        GOOGLE_SHEETS_KEY: ${{ secrets.GOOGLE_SHEETS_KEY }}
+        GOOGLE_SHEETS_TOKEN: ${{ secrets.GOOGLE_SHEETS_TOKEN }}
       run: |
-        if [ -n "$GOOGLE_SHEETS_KEY" ]; then
-          echo "$GOOGLE_SHEETS_KEY" > gs_key.json
-          echo "GS_AUTH_FILE=gs_key.json" >> $GITHUB_ENV
-        else
-          echo "Warning: GOOGLE_SHEETS_KEY secret not found. Google Sheets authentication may fail."
-        fi
+        mkdir -p ~/.R/gargle/gargle-oauth/
+        echo "$GOOGLE_SHEETS_TOKEN" | base64 -d > ~/.R/gargle/gargle-oauth/googlesheets4-token.rds
 
     - name: Run R script
-      env:
-        GS_AUTH_FILE: ${{ env.GS_AUTH_FILE }}
-      run: |
-        Rscript -e "if(file.exists('$GS_AUTH_FILE')) { library(googlesheets4); gs4_auth(path='$GS_AUTH_FILE', scopes = 'https://www.googleapis.com/auth/spreadsheets') }"
-        Rscript Bailey_wishlist_script_19Apr2025.R
+      run: Rscript Bailey_wishlist_script_19Apr2025.R
