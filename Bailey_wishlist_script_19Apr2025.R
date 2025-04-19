@@ -6,15 +6,38 @@ library(data.table)
 library(httr)
 library(googlesheets4)
 ###########################################################################################################
+# Authenticate using service account JSON passed via environment variable
+gs4_auth(path = Sys.getenv("GOOGLE_SERVICE_ACCOUNT_KEY_JSON"))
+# If you also use googledrive explicitly, add:
+ drive_auth(path = Sys.getenv("GOOGLE_SERVICE_ACCOUNT_KEY_JSON"))
 
 
 #The following Google authentication will need to be done for a new user with their own Google account:
 
 # Set the authentication options
-options(gargle_oauth_email = "richardianbailey@gmail.com")#ADD YOUR GMAIL ADDRESS HERE**********
+#options(gargle_oauth_email = "richardianbailey@gmail.com")#ADD YOUR GMAIL ADDRESS HERE**********
 
 # First-time setup (run once, then comment out)
 # gs4_auth(email = "xxxxxxxxxx@gmail.com", cache = TRUE)#ADD GMAIL HERE, AND RUN THIS ONLY ONCE THEN HASH OUT
+
+# Run once locally to get the location of the token
+#library(googlesheets4)
+#gs4_auth(email = "richardianbailey@gmail.com", cache = TRUE)
+
+# This will show you where the token files are stored
+#gargle::gargle_oauth_sitrep()
+
+# Export the token to a file
+#token <- gargle::token_fetch(email = "richardianbailey@gmail.com")
+#saveRDS(token, "github_gs_token.rds")
+
+
+# Export the token to a base64 string
+#token <- gargle::token_fetch(email = "richardianbailey@gmail.com")
+#token_file <- tempfile()
+#saveRDS(token, token_file)
+#token_base64 <- base64enc::base64encode(token_file)
+#writeLines(token_base64, "token_for_github.txt")
 
 
 
@@ -335,26 +358,6 @@ worksheet_name <- "wishlist_species"
 
 # Upload the data.table to the specified worksheet
 sheet_write(wishlist_species, ss = sheet_id, sheet = worksheet_name)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
