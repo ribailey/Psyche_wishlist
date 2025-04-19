@@ -20,42 +20,39 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v3 # Indented 4 spaces
 
     - name: Set up R
-      uses: r-lib/actions/setup-r@v2
+      uses: r-lib/actions/setup-r@v2 # Indented 4 spaces
 
-- name: Install system dependencies
-  run: |
-    sudo apt-get update
-    sudo apt-get install -y --no-install-recommends \
-      libcurl4-openssl-dev \
-      libssl-dev \
-      libxml2-dev \
-      libfontconfig1-dev \
-      libharfbuzz-dev \
-      libfribidi-dev \
-      libjpeg-dev \       # Added for jpeg package
-      libsodium-dev \     # Added for sodium package
-      libudunits2-dev \   # Added for units package
-      libgdal-dev \       # Added for sf package
-      libproj-dev \       # Added for sf package (proj)
-      libgeos-dev \       # Added for sf package (geos)
-      gdal-bin            # Added for sf package (gdal utilities)
+    # Corrected Indentation for this step
+    - name: Install system dependencies
+      run: | # Indented 4 spaces for the step, 6 for the run block
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          libcurl4-openssl-dev \
+          libssl-dev \
+          libxml2-dev \
+          libfontconfig1-dev \
+          libharfbuzz-dev \
+          libfribidi-dev \
+          libjpeg-dev \
+          libsodium-dev \
+          libudunits2-dev \
+          libgdal-dev \
+          libproj-dev \
+          libgeos-dev \
+          gdal-bin
 
     - name: Install R packages
-      run: |
+      run: | # Indented 4 spaces for the step, 6 for the run block
         R -e "install.packages(c('data.table', 'jsonlite', 'httr', 'curl', 'gargle', 'googledrive', 'googlesheets4'), repos='https://cloud.r-project.org/', dependencies=TRUE)"
 
-    - name: Setup Google authentication
-      env:
-        GOOGLE_SHEETS_TOKEN: ${{ secrets.GOOGLE_SHEETS_TOKEN }}
-      run: |
-        mkdir -p ~/.R/gargle/gargle-oauth/
-        echo "$GOOGLE_SHEETS_TOKEN" | base64 -d > ~/.R/gargle/gargle-oauth/googlesheets4-token.rds
+    # REMOVED the old 'Setup Google authentication' step entirely
 
-- name: Run R script
-  env:
-    # Pass the JSON key content as an environment variable
-    GOOGLE_SERVICE_ACCOUNT_KEY_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY_JSON }}
-  run: Rscript Bailey_wishlist_script_19Apr2025.R # Make sure this matches your actual R script filename
+    # ADDED the correct step to run the script using the Service Account Key
+    - name: Run R script
+      env:
+        # Pass the JSON key content from GitHub Secrets as an environment variable
+        GOOGLE_SERVICE_ACCOUNT_KEY_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY_JSON }}
+      run: Rscript Bailey_wishlist_script_19Apr2025.R # Indented 4 spaces for the step, 6 for env/run
