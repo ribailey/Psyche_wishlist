@@ -54,5 +54,8 @@ jobs:
         mkdir -p ~/.R/gargle/gargle-oauth/
         echo "$GOOGLE_SHEETS_TOKEN" | base64 -d > ~/.R/gargle/gargle-oauth/googlesheets4-token.rds
 
-    - name: Run R script
-      run: Rscript Bailey_wishlist_script_19Apr2025.R
+- name: Run R script
+  env:
+    # Pass the JSON key content as an environment variable
+    GOOGLE_SERVICE_ACCOUNT_KEY_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY_JSON }}
+  run: Rscript Bailey_wishlist_script_19Apr2025.R # Make sure this matches your actual R script filename
