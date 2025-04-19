@@ -12,7 +12,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # Allows manual triggering of the workflow from the Actions tab
+  workflow_dispatch:
 
 jobs:
   run-r-script:
@@ -24,9 +24,38 @@ jobs:
 
     - name: Set up R
       uses: r-lib/actions/setup-r@v2
+      with:
+        r-version: '4.2.0'
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          libcurl4-openssl-dev \
+          libssl-dev \
+          libxml2-dev \
+          libfontconfig1-dev \
+          libharfbuzz-dev \
+          libfribidi-dev
 
     - name: Install R packages
-      run: R -e "install.packages(c('data.table', 'jsonlite', 'httr', 'googlesheets4'), repos='https://cloud.r-project.org/')"
+      run: |
+        R -e "install.packages(c('data.table', 'jsonlite', 'httr', 'curl', 'gargle', 'googledrive', 'googlesheets4'), repos='https://cloud.r-project.org/', dependencies=TRUE)"
+
+    - name: Set up Google authentication
+      env:
+        GOOGLE_SHEETS_KEY: ${{ secrets.GOOGLE_SHEETS_KEY }}
+      run: |
+        if [ -n "$GOOGLE_SHEETS_KEY" ]; then
+          echo "$GOOGLE_SHEETS_KEY" > gs_key.json
+          echo "GS_AUTH_FILE=gs_key.json" >> $GITHUB_ENV
+        else
+          echo "Warning: GOOGLE_SHEETS_KEY secret not found. Google Sheets authentication may fail."
+        fi
 
     - name: Run R script
-      run: Rscript Bailey_wishlist_script_19Apr2025.R
+      env:
+        GS_AUTH_FILE: ${{ env.GS_AUTH_FILE }}
+      run: |
+        Rscript -e "if(file.exists('$GS_AUTH_FILE')) { library(googlesheets4); gs4_auth(path='$GS_AUTH_FILE', scopes = 'https://www.googleapis.com/auth/spreadsheets') }"
+        Rscript Bailey_wishlist_script_19Apr2025.R
