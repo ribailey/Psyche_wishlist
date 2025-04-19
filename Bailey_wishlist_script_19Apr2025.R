@@ -9,7 +9,7 @@ library(googlesheets4)
 # Authenticate using service account JSON passed via environment variable
 gs4_auth(path = Sys.getenv("GOOGLE_SERVICE_ACCOUNT_KEY_JSON"))
 # If you also use googledrive explicitly, add:
- drive_auth(path = Sys.getenv("GOOGLE_SERVICE_ACCOUNT_KEY_JSON"))
+ googledrive::drive_auth(path = Sys.getenv("GOOGLE_SERVICE_ACCOUNT_KEY_JSON"))
 
 
 #The following Google authentication will need to be done for a new user with their own Google account:
@@ -358,7 +358,3 @@ worksheet_name <- "wishlist_species"
 
 # Upload the data.table to the specified worksheet
 sheet_write(wishlist_species, ss = sheet_id, sheet = worksheet_name)
-
-
-
-
