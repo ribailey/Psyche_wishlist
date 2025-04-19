@@ -1,0 +1,20 @@
+name: Build and Test Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Build Docker image
+      run: docker build -t psyche-r-script .
+
+    - name: Run Docker container
+      run: docker run psyche-r-script
