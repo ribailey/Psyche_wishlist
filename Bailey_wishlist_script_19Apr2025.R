@@ -5,6 +5,36 @@ library(jsonlite)
 library(data.table)
 library(httr)
 library(googlesheets4)
+library(googledrive)
+###########################################################################################################
+# Define a function for GET requests with retry capability
+get_with_retry <- function(url, ..., max_attempts = 3, base_delay = 5) {
+  # Create timeout configuration
+  timeout_config <- httr::config(connecttimeout = 60, timeout = 300)
+  
+  for (attempt in 1:max_attempts) {
+    tryCatch({
+      # Pass all additional arguments (...) directly to GET
+      response <- httr::GET(
+        url = url,
+        ...,  # This allows passing add_headers() and any other parameters
+        config = timeout_config
+      )
+      
+      # If successful, return the response
+      return(response)
+    }, error = function(e) {
+      # Error handling code remains the same
+      if (attempt == max_attempts) {
+        stop(paste("Failed after", max_attempts, "attempts:", e$message))
+      }
+      
+      wait_time <- base_delay * attempt
+      message(paste("Request failed, retrying in", wait_time, "seconds... (Attempt", attempt, "of", max_attempts, ")"))
+      Sys.sleep(wait_time)
+    })
+  }
+};
 ###########################################################################################################
 # Authenticate using service account JSON passed via environment variable
 gs4_auth(path = Sys.getenv("GOOGLE_SERVICE_ACCOUNT_KEY_JSON"))
@@ -56,8 +86,14 @@ size_limit="&size=100000"                       #Increase this number if downloa
 psycheinp_url <- "search?result=taxon&query=in_progress%3DPSYCHE%20AND%20long_list%3DPSYCHE%20AND%20tax_rank%28species%29&taxonomy=ncbi&includeEstimates=true&excludeMissing%5B0%5D=in_progress&excludeAncestral%5B0%5D=in_progress&fields=long_list%2Cin_progress"
 
 
-response <- GET(
-  url = paste0(api_url, psycheinp_url,size_limit,sep=""),
+#response <- GET(
+#  url = paste0(api_url, psycheinp_url,size_limit,sep=""),
+#  add_headers(Accept = "text/csv")
+#)
+
+# New (using the improved function):
+response <- get_with_retry(
+  url = paste0(api_url, psycheinp_url, size_limit, sep=""),
   add_headers(Accept = "text/csv")
 )
 
@@ -72,7 +108,7 @@ psycheinp <- fread(text = csv_content)
 psycherec_url <- "search?result=taxon&query=sample_acquired%3DPSYCHE%20AND%20long_list%3DPSYCHE%20AND%20tax_rank%28species%29&taxonomy=ncbi&includeEstimates=true&excludeMissing%5B0%5D=sample_acquired&excludeAncestral%5B0%5D=sample_acquired&fields=long_list%2Csample_acquired"
 
 
-response <- GET(
+response <- get_with_retry(#previousy GET#
   url = paste0(api_url, psycherec_url,size_limit,sep=""),
   add_headers(Accept = "text/csv")
 )
@@ -89,7 +125,7 @@ psycherec <- fread(text = csv_content)
 psychecoll_url <- "search?result=taxon&query=sample_collected%3DPSYCHE%20AND%20long_list%3DPSYCHE%20AND%20tax_rank%28species%29&taxonomy=ncbi&includeEstimates=true&excludeMissing%5B0%5D=sample_collected&excludeAncestral%5B0%5D=sample_collected&fields=long_list%2Csample_collected"
 
 
-response <- GET(
+response <- get_with_retry(#previousy GET#
   url = paste0(api_url, psychecoll_url,size_limit,sep=""),
   add_headers(Accept = "text/csv")
 )
@@ -106,7 +142,7 @@ psychecoll <- fread(text = csv_content)
 psycheplus_url <- "search?result=taxon&query=length%28sample_collected%29%3E1%20AND%20sequencing_status_psyche%3E%3Dsample_collected%20AND%20bioproject%3Dnull%2C%21PRJEB71705%20AND%20ebp_metric_date%3Dnull%20AND%20assembly_level%3Dnull%2C%21chromosome%2C%21complete%20genome%20AND%20sequencing_status_psyche%3E%3Dsample_acquired%20AND%20tax_rank%28species%29&taxonomy=ncbi&includeEstimates=true&fields=sequencing_status_psyche%2Csample_collected%2Cbioproject%2Cebp_metric_date%2Cassembly_level"
 
 
-response <- GET(
+response <- get_with_retry(#previousy GET#
   url = paste0(api_url, psycheplus_url,size_limit,sep=""),
   add_headers(Accept = "text/csv")
 )
@@ -123,7 +159,7 @@ psycheplus <- fread(text = csv_content)
 ebp_url <- "search?result=taxon&query=long_list%3DPSYCHE%20AND%20length%28long_list%29%3E1%20AND%20sequencing_status%3E%3Dsample_collected%20AND%20sequencing_status_psyche%3Dnull%20AND%20bioproject%3D%21PRJEB71705%2Cnull%20AND%20ebp_metric_date%3Dnull%20AND%20assembly_level%3Dnull%2C%21chromosome%2C%21complete%20genome%20AND%20long_list%3DPSYCHE%20AND%20tax_rank%28species%29&taxonomy=ncbi&includeEstimates=true&fields=long_list%2Csequencing_status%2Csequencing_status_psyche%2Cbioproject%2Cebp_metric_date%2Cassembly_level"
 
 
-response <- GET(
+response <- get_with_retry(#previousy GET#
   url = paste0(api_url, ebp_url,size_limit,sep=""),
   add_headers(Accept = "text/csv")
 )
@@ -141,7 +177,7 @@ ebp <- fread(text = csv_content)
 seq_url <- "search?result=taxon&query=long_list%3DPSYCHE%20AND%20ebp_metric_date%20AND%20bioproject%21%3DPRJEB71705%20AND%20long_list%3DPSYCHE%20AND%20tax_rank%28species%29&taxonomy=ncbi&includeEstimates=true&excludeMissing%5B0%5D=long_list&size=100#long_list%3DPSYCHE%20AND%20ebp_metric_date%20AND%20bioproject!%3DPRJEB71705%20AND%20long_list%3DPSYCHE%20AND%20tax_rank(species)"
 
 
-response <- GET(
+response <- get_with_retry(#previousy GET#
   url = paste0(api_url, seq_url,size_limit,sep=""),
   add_headers(Accept = "text/csv")
 )
