@@ -1,4 +1,12 @@
 ###########################################################################################################
+# Psyche Wishlist Script
+# Copyright (c) 2025 Richard Ian Bailey
+# This code is licensed under the MIT License - see the LICENSE file in the repository
+# 
+# If you use or modify this code, please maintain this attribution notice
+###########################################################################################################
+
+###########################################################################################################
 #Richard Ian Bailey 18 April 2025 - Updating species wishlists based on GOAT and Psyche Google Sheet info##
 ###########################################################################################################
 library(jsonlite)
