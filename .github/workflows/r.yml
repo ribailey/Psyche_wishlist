@@ -13,6 +13,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+  schedule:
+    # This runs at 2am UTC (4am Polish time during summer, UTC+2)
+    # and 3am UTC (4am Polish time during winter, UTC+1)
+    - cron: '0 2 * * *'  # April-October (Summer time)
+    - cron: '0 3 * * *'  # November-March (Winter time)
 
 jobs:
   run-r-script:
@@ -20,14 +25,13 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3 # Indented 4 spaces
+      uses: actions/checkout@v3
 
     - name: Set up R
-      uses: r-lib/actions/setup-r@v2 # Indented 4 spaces
+      uses: r-lib/actions/setup-r@v2
 
-    # Corrected Indentation for this step
     - name: Install system dependencies
-      run: | # Indented 4 spaces for the step, 6 for the run block
+      run: |
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends \
           libcurl4-openssl-dev \
@@ -45,14 +49,49 @@ jobs:
           gdal-bin
 
     - name: Install R packages
-      run: | # Indented 4 spaces for the step, 6 for the run block
+      run: |
         R -e "install.packages(c('data.table', 'jsonlite', 'httr', 'curl', 'gargle', 'googledrive', 'googlesheets4'), repos='https://cloud.r-project.org/', dependencies=TRUE)"
 
-    # REMOVED the old 'Setup Google authentication' step entirely
-
-    # ADDED the correct step to run the script using the Service Account Key
-    - name: Run R script
+    - name: Run R script with enhanced logging
       env:
         # Pass the JSON key content from GitHub Secrets as an environment variable
         GOOGLE_SERVICE_ACCOUNT_KEY_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY_JSON }}
-      run: Rscript Bailey_wishlist_script_19Apr2025.R # Indented 4 spaces for the step, 6 for env/run
+      run: |
+        echo "==== Starting Psyche wishlist update at $(date) ===="
+        echo "Running in GitHub Actions workflow: ${{ github.workflow }}"
+        echo "Run ID: ${{ github.run_id }}"
+        
+        # Run the R script and capture exit code
+        Rscript Bailey_wishlist_script_19Apr2025.R
+        EXIT_CODE=$?
+        
+        # Report completion status
+        echo "==== R script completed with exit code: $EXIT_CODE at $(date) ===="
+        
+        # Fail the workflow if the script failed
+        if [ $EXIT_CODE -ne 0 ]; then
+          echo "::error::R script failed with exit code $EXIT_CODE"
+          exit $EXIT_CODE
+        fi
+        
+        echo "Wishlist update completed successfully"
+
+    - name: Send email notification on failure
+      if: failure()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: ${{ secrets.MAIL_SERVER }}
+        server_port: ${{ secrets.MAIL_PORT }}
+        username: ${{ secrets.MAIL_USERNAME }}
+        password: ${{ secrets.MAIL_PASSWORD }}
+        subject: "❌ Failed: Psyche Wishlist Daily Update"
+        body: |
+          The daily Psyche wishlist update has failed.
+          
+          Workflow: ${{ github.workflow }}
+          Run ID: ${{ github.run_id }}
+          Run URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          
+          Please check the GitHub Actions logs for more details.
+        to: richardianbailey@gmail.com
+        from: GitHub Actions
